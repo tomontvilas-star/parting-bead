@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timeless Profiles has moved</title>
+<style>
+:root{--bg:#f6f3ee;--ink:#2b2823;--brand:#5c554a;--gold:#b89a5a;--muted:#6f685d}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1d1a;--ink:#f1ece4;--brand:#b89a5a;--muted:#b3ab9f}}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,sans-serif;padding:24px 16px;box-sizing:border-box}
+main{max-width:420px;text-align:center}h1{font-family:Georgia,serif;font-weight:600;font-size:1.7rem;margin:0 0 10px}
+p{line-height:1.5;color:var(--muted);margin:0 0 14px}a.btn{display:inline-block;margin:8px 0 18px;padding:14px 22px;border-radius:10px;background:var(--brand);color:#fff;text-decoration:none;font-weight:600;font-size:1.05rem}
+ol{text-align:left;color:var(--ink);line-height:1.6;padding-left:22px}small{color:var(--muted)}
+</style></head><body><main>
+<h1>Timeless Profiles has moved</h1>
+<p>The app now lives at <b>timeless-profiles.pages.dev</b>. Your own profiles and job come with you.</p>
+<a class="btn" id="go" href="https://timeless-profiles.pages.dev/">Open the new app</a>
+<ol><li>Open the new app with the button.</li><li>In Safari tap <b>Share</b> → <b>Add to Home Screen</b>.</li><li>Delete the old icon from your Home Screen.</li></ol>
+<small>© 2026 Tomas Montvilas. All rights reserved.</small>
+</main>
+<script>
+(function(){var base="https://timeless-profiles.pages.dev/",d={};
+ try{["beadsCustom","beads1","beadsSnap"].forEach(function(k){var v=localStorage.getItem(k);if(v)d[k]=v;});}catch(e){}
+ var url=base;try{if(Object.keys(d).length){var b=btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");url=base+"#migrate="+b;}}catch(e){}
+ document.getElementById("go").href=url;
+ // stop the old offline copy from coming back
+ try{if(navigator.serviceWorker)navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}catch(e){}
+ try{if(window.caches)caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}catch(e){}
+ setTimeout(function(){location.replace(url);},2500);})();
+</script></body></html>
