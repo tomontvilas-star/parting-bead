@@ -286,13 +286,14 @@
     <div style="position:absolute;inset:0;background:linear-gradient(160deg,#ffb6e1,#c9a6ff 55%,#8fd8ff)"></div>
     <div style="position:absolute;left:0;right:0;top:90px;text-align:center;font-size:86px;font-weight:800;color:#fff;text-shadow:0 6px 0 #c04fd8">The Toy House</div>
     <div id="introToys" style="position:absolute;left:0;right:0;top:250px;display:flex;justify-content:center;align-items:flex-end;gap:30px"></div>
+    <div style="position:absolute;right:40px;bottom:30px;color:#fff;font-size:22px;opacity:.8">v3</div>
     <button id="wake">✨ Wake up, toys! ✨</button>
   </div>
   <div id="flash"></div>
 </div>
 
 <script src="lines.js"></script>
-<script src="voices.js"></script>
+<script src="voice/manifest.js"></script>
 <script>
 // ======================= helpers =======================
 const $ = s => document.querySelector(s);
@@ -350,16 +351,17 @@ const chirps = { teddy: [330, 262], bigbunny: [784, 988], littlebunny: [1175, 13
 const chirp = id => (chirps[id] || []).forEach((f, i) => setTimeout(() => tone(f, .09, 'sine', .1), i * 90));
 
 // ======================= voices =======================
-const VOS = window.VOS || {};
-let vsprite = null, vloading = false, vsrc = null, vtag = null, speakingEl = null;
+// Voices play through one normal audio player (works on silent mode and in home-screen apps).
+const VO = window.VO || {};
+const vEl = new Audio(); vEl.preload = 'auto'; vEl.setAttribute('playsinline', '');
+let vUnlocked = false, vsrc = null, vtag = null, speakingEl = null;
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
 function preloadVoices() {
-  if (vloading) return; vloading = true;
-  try {
-    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-    fetch('voices.mp3').then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => ac.decodeAudioData(b, ok, no))).then(buf => { vsprite = buf; }).catch(() => { vloading = false; });
-  } catch (e) { vloading = false; }
+  if (vUnlocked) return; vUnlocked = true;
+  try { vEl.src = SILENT; const pr = vEl.play(); if (pr) pr.catch(() => { vUnlocked = false; }); } catch (e) { vUnlocked = false; }
 }
 function stopVoice() {
+  try { vEl.onended = null; vEl.pause(); } catch (e) {}
   try { if (vsrc) { vsrc.onended = null; vsrc.stop(); } } catch (e) {} vsrc = null;
   try { if (vtag) { vtag.onended = null; vtag.pause(); } } catch (e) {} vtag = null;
   try { speechSynthesis.cancel(); } catch (e) {}
@@ -380,14 +382,12 @@ function say(text, who = 'narrator', done) {
   const backup = setTimeout(fin, 2500 + text.length * 90);
   const ended = () => { clearTimeout(backup); setTimeout(fin, 250); };
   if (el) el.classList.add('talking');
-  const seg = VOS[who + '|' + text];
+  const file = VO[who + '|' + text];
   try {
     if (ac && ac.state === 'suspended') ac.resume();
-    if (seg && vsprite) {
-      const src = ac.createBufferSource(), g = ac.createGain(); g.gain.value = 1.4;
-      src.buffer = vsprite; src.connect(g); g.connect(ac.destination); src.onended = ended; src.start(0, seg[0], seg[1] + .05); vsrc = src;
-    } else if (seg) {
-      clearTimeout(backup); setTimeout(fin, 1200); // voice file still loading
+    if (file) {
+      vEl.onended = ended; vEl.src = 'voice/' + file; vEl.volume = 1;
+      const pr = vEl.play(); if (pr) pr.catch(() => {});
     } else {
       const u = new SpeechSynthesisUtterance(text); u.rate = .9; u.onend = ended; speechSynthesis.speak(u);
     }
@@ -1008,7 +1008,11 @@ $('#wake').addEventListener('click', () => {
   }, 450);
 });
 document.addEventListener('gesturestart', e => e.preventDefault());
-if ('serviceWorker' in navigator) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {}));
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded && !started) { reloaded = true; location.reload(); } });
+}
 </script>
 </body>
 </html>
