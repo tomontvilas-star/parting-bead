@@ -329,6 +329,17 @@ function tone(f = 600, d = .15, type = 'sine', v = .2) {
     o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
   } catch (e) {}
 }
+function unlockAudio() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = 'playback'; // sound even when the iPad is on silent
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state !== 'running') ac.resume();
+    const b = ac.createBuffer(1, 1, 22050), s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0);
+  } catch (e) {}
+  if (typeof preloadVoices === 'function') preloadVoices();
+}
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ac && ac.state !== 'running') { try { ac.resume(); } catch (e) {} } });
 const happy = () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, .18, 'triangle'), i * 110));
 const magic = () => [880, 1100, 1320, 1760, 1320, 1760, 2093].forEach((f, i) => setTimeout(() => tone(f, .12, 'sine', .14), i * 80));
 const oops = () => tone(220, .25, 'square', .07);
@@ -988,8 +999,8 @@ tap($('#dressTick'), () => {
 $('#nstars').textContent = store.stars;
 $('#introToys').innerHTML = TEDDY + BIGBUNNY + dollSVG('dolly') + dollSVG('rosie') + dollSVG('lily') + LITTLEBUNNY;
 for (let i = 0; i < 14; i++) { const s = document.createElement('div'); s.className = 'istar'; s.textContent = pick(['✨', '⭐', '💫']); s.style.left = rand(40, 920) + 'px'; s.style.top = rand(40, 520) + 'px'; s.style.animationDelay = rand(0, 1.4) + 's'; $('#intro').appendChild(s); }
-tap($('#wake'), () => {
-  preloadVoices(); magic(); $('#flash').classList.add('go');
+$('#wake').addEventListener('click', () => {
+  unlockAudio(); magic(); $('#flash').classList.add('go');
   setTimeout(() => {
     $('#intro').style.display = 'none'; started = true;
     ['teddy', 'bigbunny', 'dolly'].forEach((id, i) => setTimeout(() => { const e = CH[id].el; e.classList.add('jump'); chirp(id); setTimeout(() => e.classList.remove('jump'), 650); }, 300 + i * 300));
